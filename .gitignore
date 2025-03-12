@@ -1,0 +1,19 @@
+# Virtual environment
+finenv/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE & OS-specific files
+.vscode/
+*.log
+.DS_Store
+Thumbs.db
+
+# Dependency files
+.env
+
+# Ignore Firebase private key
+backend/firebase_key.json
