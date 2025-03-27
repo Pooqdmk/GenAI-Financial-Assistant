@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
 
 # Initialize Firebase only once
-cred = credentials.Certificate("firebase_key.json")  # 🔹 Replace with your actual key path
+cred = credentials.Certificate("firebase_key.json")  
 initialize_app(cred)
 db = firestore.client()
 
