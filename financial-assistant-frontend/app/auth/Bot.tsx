@@ -47,7 +47,9 @@ export default function Bot() {
   // Send a message
   const sendMessage = () => {
     if (!message.trim() || currentChatId === null) return;
-
+    
+    const timestamp = new Date().toLocaleTimeString();
+    
     setConversations(
       conversations.map((chat) =>
         chat.id === currentChatId
