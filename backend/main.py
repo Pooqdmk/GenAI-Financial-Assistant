@@ -7,6 +7,10 @@ from dotenv import load_dotenv
 import os
 import logging
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import WebSocket, WebSocketDisconnect, BackgroundTasks
+import asyncio
+import threading
+
 
 # Load environment variables
 load_dotenv()
@@ -47,15 +51,39 @@ You are a financial assistant providing structured and user-friendly investment 
 - Enhance responses with emojis
 """
 
-# Generate Investment Advice
+#generate advice
 def generate_investment_advice(prompt: str):
     try:
         model = genai.GenerativeModel("gemini-pro")
         response = model.generate_content(f"{SYSTEM_PROMPT}\nUser: {prompt}\nAssistant:")
-        return response.text if response else "No response from AI."
+        
+        # Process AI response into structured data
+        structured_response = {
+            "stability": [],
+            "high_growth": [],
+            "passive_income": [],
+            "risk_level": "Medium",
+            "summary": ""
+        }
+
+        if response and response.text:
+            text = response.text.lower()
+            if "bonds" in text:
+                structured_response["stability"].append("Bonds")
+            if "stocks" in text:
+                structured_response["high_growth"].append("Stocks")
+            if "reits" in text:
+                structured_response["passive_income"].append("REITs")
+            
+            # Extract summary (last sentence)
+            structured_response["summary"] = text.split(".")[-1]
+        
+        return structured_response
+
     except Exception as e:
         logging.error(f"Error generating content: {e}")
-        return "Failed to generate response."
+        return {"error": "Failed to generate response."}
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -156,3 +184,34 @@ app.add_middleware(
 @app.get("/")
 def home():
     return {"message": "Welcome to GenAI Financial Assistant!"}
+
+
+connected_clients = []
+
+@app.websocket("/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: str):
+    await websocket.accept()
+    connected_clients.append({"id": user_id, "ws": websocket})
+    try:
+        while True:
+            await websocket.receive_text()  # Keep connection alive
+    except WebSocketDisconnect:
+        connected_clients.remove({"id": user_id, "ws": websocket})
+
+
+def listen_for_profile_changes():
+    def on_snapshot(doc_snapshot, changes, read_time):
+        for doc in doc_snapshot:
+            user_id = doc.id
+            user_data = doc.to_dict()
+            
+            # Send update to relevant WebSocket client
+            for client in connected_clients:
+                if client["id"] == user_id:
+                    asyncio.run(client["ws"].send_json({"update": user_data}))
+
+    users_ref = db.collection("users")
+    users_ref.on_snapshot(on_snapshot)
+
+# Run Firestore listener in a separate thread
+threading.Thread(target=listen_for_profile_changes, daemon=True).start()
