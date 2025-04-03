@@ -47,7 +47,6 @@ gdg/
 # Firebase API keys & sensitive config (VERY IMPORTANT)
 .gdg.local
 .gdg
-firebaseConfig.ts
 .env  # Ignore environment variables
 firebase.json  # Optional: Ignore Firebase deployment config
 
