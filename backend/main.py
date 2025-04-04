@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import WebSocket, WebSocketDisconnect, BackgroundTasks
 import asyncio
 import threading
+from rag_module import retrieve_relevant_docs
 
 
 # Load environment variables
@@ -51,13 +52,27 @@ You are a financial assistant providing structured and user-friendly investment 
 - Enhance responses with emojis
 """
 
-#generate advice
+# Generate advice using Gemini + RAG
 def generate_investment_advice(prompt: str):
     try:
         model = genai.GenerativeModel("gemini-pro")
-        response = model.generate_content(f"{SYSTEM_PROMPT}\nUser: {prompt}\nAssistant:")
-        
-        # Process AI response into structured data
+
+        # 🔍 Retrieve relevant context from your vector DB
+        relevant_docs = retrieve_relevant_docs(prompt)
+        context = "\n".join(relevant_docs)
+
+        # Combine system prompt + retrieved context + user prompt
+        final_prompt = (
+            f"{SYSTEM_PROMPT}\n"
+            f"Context:\n{context}\n"
+            f"User: {prompt}\n"
+            f"Assistant:"
+        )
+
+        # 🎯 Get Gemini response
+        response = model.generate_content(final_prompt)
+
+        # 📦 Structure the output
         structured_response = {
             "stability": [],
             "high_growth": [],
@@ -74,10 +89,9 @@ def generate_investment_advice(prompt: str):
                 structured_response["high_growth"].append("Stocks")
             if "reits" in text:
                 structured_response["passive_income"].append("REITs")
-            
-            # Extract summary (last sentence)
-            structured_response["summary"] = text.split(".")[-1]
-        
+
+            structured_response["summary"] = text.split(".")[-1].strip()
+
         return structured_response
 
     except Exception as e:
