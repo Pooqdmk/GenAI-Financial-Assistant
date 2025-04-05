@@ -55,7 +55,7 @@ You are a financial assistant providing structured and user-friendly investment 
 # Generate advice using Gemini + RAG
 def generate_investment_advice(prompt: str):
     try:
-        model = genai.GenerativeModel("gemini-pro")
+        model = genai.GenerativeModel("gemini-1.5-pro")
 
         # 🔍 Retrieve relevant context from your vector DB
         relevant_docs = retrieve_relevant_docs(prompt)
@@ -123,8 +123,7 @@ class UserAuth(BaseModel):
 
 # Investment Query Model
 class InvestmentQuery(BaseModel):
-    investment_type: str  # "short-term" or "long-term"
-    experience_level: str  # "beginner" or "experienced"
+    query: str
 
 # Health Check
 @app.get("/healthcheck")
@@ -170,13 +169,19 @@ def recommend(query: InvestmentQuery, user=Depends(verify_token)):
         user_id = user.get("uid")
         user_doc = db.collection("users").document(user_id).get()
 
-        # Check if user profile exists
+        # Combine user profile with their query
         if user_doc.exists:
             user_data = user_doc.to_dict()
-            prompt = f"The user is a {user_data.get('experience_level', 'beginner')} investor looking for {user_data.get('investment_type', 'long-term')} investments."
+            prompt = (
+                f"The user is a {user_data.get('experience_level', 'beginner')} investor "
+                f"interested in {user_data.get('investment_type', 'long-term')} investments. "
+                f"They asked: '{query.query}'"
+            )
         else:
-            # Ask friendly follow-up questions if data is missing
-            prompt = f"The user is looking for investment advice but hasn't provided details. Start by asking if they prefer low risk, high growth, or balanced investments."
+            prompt = (
+                f"The user asked: '{query.query}'. "
+                f"Start by asking if they prefer low risk, high growth, or balanced investments."
+            )
 
         recommendation = generate_investment_advice(prompt)
         return {"recommendation": recommendation}
@@ -184,6 +189,7 @@ def recommend(query: InvestmentQuery, user=Depends(verify_token)):
     except Exception as e:
         logger.error(f"Error in /recommend: {e}")
         raise HTTPException(status_code=500, detail="An error occurred while processing your request.")
+
 
 # Allow CORS (🔹 Restrict later in production)
 app.add_middleware(

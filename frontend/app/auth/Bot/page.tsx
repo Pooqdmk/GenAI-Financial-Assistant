@@ -44,30 +44,80 @@ export default function Bot() {
     if (currentChatId === chatId) setCurrentChatId(null);
   };
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!message.trim() || currentChatId === null) return;
-
+  
     const timestamp = new Date().toLocaleTimeString();
-    
-    // Ensure the user message stays visible while bot processes
+  
+    // Step 1: Add user's message
     setConversations(conversations.map((chat) =>
       chat.id === currentChatId
-        ? { ...chat, messages: [...chat.messages, { text: message, sender: "user", timestamp }] }
+        ? {
+            ...chat,
+            messages: [...chat.messages, { text: message, sender: "user", timestamp }],
+          }
         : chat
     ));
-
+  
+    const userMessage = message; // Save before clearing input
     setMessage("");
     setIsBotTyping(true);
+  
+    try {
+      // Step 2: Send POST to FastAPI
+      const token = await auth.currentUser?.getIdToken();
 
-    setTimeout(() => {
+      const response = await fetch("http://localhost:8000/recommend", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          query: userMessage, // Or whatever field your FastAPI expects
+        }),
+      });
+  
+      const data = await response.json();
+  
+      // Step 3: Add bot's response
       setConversations(conversations.map((chat) =>
         chat.id === currentChatId
-          ? { ...chat, messages: [...chat.messages, { text: "Processing your request...", sender: "bot", timestamp: new Date().toLocaleTimeString() }] }
+          ? {
+              ...chat,
+              messages: [
+                ...chat.messages,
+                {
+                  text: data.recommendation || data.reply || "Something went wrong",
+                  sender: "bot",
+                  timestamp: new Date().toLocaleTimeString(),
+                },
+              ],
+            }
           : chat
       ));
+    } catch (err) {
+      console.error("Error:", err);
+      setConversations(conversations.map((chat) =>
+        chat.id === currentChatId
+          ? {
+              ...chat,
+              messages: [
+                ...chat.messages,
+                {
+                  text: "❌ Bot failed to respond. Try again later.",
+                  sender: "bot",
+                  timestamp: new Date().toLocaleTimeString(),
+                },
+              ],
+            }
+          : chat
+      ));
+    } finally {
       setIsBotTyping(false);
-    }, 1000);
+    }
   };
+  
 
   const currentChat = conversations.find((chat) => chat.id === currentChatId);
 
@@ -87,7 +137,10 @@ export default function Bot() {
               key={chat.id}
               style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px", margin: "5px 0", backgroundColor: currentChatId === chat.id ? "#4A5568" : "#718096", cursor: "pointer", borderRadius: "5px" }}
             >
-              <div onClick={() => loadChat(chat.id)} style={{ flexGrow: 1 }}>{chat.messages[0]?.text.slice(0, 20) || "New Chat"}</div>
+              <div onClick={() => loadChat(chat.id)} style={{ flexGrow: 1 }}>{typeof chat.messages[0]?.text === "string"
+  ? chat.messages[0].text.slice(0, 20)
+  : "New Chat"}
+</div>
               <FaTrash onClick={() => deleteChat(chat.id)} style={{ cursor: "pointer", color: "white", marginLeft: "10px" }} />
             </div>
           ))}
