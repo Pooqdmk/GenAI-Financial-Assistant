@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -79,23 +80,19 @@ export default function Bot() {
 
       const data = await response.json();
 
-      let reply = "Here's what I found:\n";
+      const stripMarkdown = (text: string) => {
+        return text.replace(/\*\*(.*?)\*\*/g, '$1');
+      };
+      
+
       const rec = data.recommendation;
 
-      if (rec) {
-        if (rec.stability?.length)
-          reply += `\n💼 **Stability-focused investments**: ${rec.stability.join(", ")}`;
-        if (rec.high_growth?.length)
-          reply += `\n🚀 **High-Growth assets**: ${rec.high_growth.join(", ")}`;
-        if (rec.passive_income?.length)
-          reply += `\n🏡 **Passive Income ideas**: ${rec.passive_income.join(", ")}`;
-        if (rec.risk_level)
-          reply += `\n📊 **Risk Level**: ${rec.risk_level}`;
-        if (rec.summary)
-          reply += `\n📝 **Summary**: ${rec.summary}`;
-      } else {
-        reply = "🤖 I couldn't generate a proper recommendation.";
-      }
+      let cleanedRec = rec ? stripMarkdown(rec) : null;
+
+      let reply = cleanedRec
+        ? `🤖 Here's what I found:\n\n${cleanedRec}`
+        : "🤖 I couldn't generate a proper recommendation.";
+
 
       // Append bot message
       const botReply = {
@@ -167,7 +164,7 @@ export default function Bot() {
               <div key={idx} style={{ display: "flex", justifyContent: msg.sender === "user" ? "flex-end" : "flex-start", marginBottom: "10px" }}>
                 <div style={{ maxWidth: "60%", backgroundColor: msg.sender === "user" ? "#2B2F4C" : "#E2E8F0", padding: "10px", borderRadius: "10px", color: msg.sender === "user" ? "white" : "black" }}>
                   <div style={{ fontSize: "0.9em", marginBottom: "5px", fontWeight: "bold" }}>{msg.sender === "user" ? "You" : "Bot"}</div>
-                  <div>{msg.text}</div>
+                  <div style={{ whiteSpace: "pre-wrap" }}>{msg.text}</div>
                   <div style={{ fontSize: "0.8em", color: "gray", marginTop: "5px", textAlign: "right" }}>{msg.timestamp}</div>
                 </div>
               </div>
