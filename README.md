@@ -122,39 +122,109 @@ This backend powers a conversational AI-driven **financial advisor bot** that pr
 ---
 
  # frontend
- This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# 💸 GenAI Financial Assistant – Frontend
 
-First, run the development server:
+This is the frontend for the GenAI-based Financial Assistant. It provides a sleek chat interface for users to interact with the assistant, which offers financial recommendations using GenAI and a FastAPI backend.
 
-```bash
+---
+
+## 🔧 Tech Stack
+
+- **Next.js** (React Framework)
+- **TypeScript**
+- **Firebase Authentication**
+- **Tailwind CSS**
+- **React Icons**
+- **React Markdown**
+- **FastAPI (Backend Integration)**
+
+---
+
+## 🚀 Features
+
+- Google and GitHub authentication using Firebase
+- Chat interface with real-time user-bot conversation
+- Markdown rendering for bot responses
+- Multiple chat sessions with chat history
+- Integration with backend `/recommend` endpoint for financial recommendations
+
+---
+
+## 🛠️ Setup & Run Locally
+
+### 1. Clone the repository
+
+bash
+git clone https://github.com/your-username/GenAI-Financial-Assistant.git
+cd GenAI-Financial-Assistant/frontend
+
+2. Install dependencies
+bash
+npm install
+
+3. Create .env.local file
+bash
+touch .env.local
+
+
+4. Add your Firebase configuration:
+
+env
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+
+
+5. Run the development server
+
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open your browser at http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+🔗 Backend Integration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Ensure your FastAPI backend is running locally at:
 
-## Learn More
+bash
+http://localhost:8000/recommend
 
-To learn more about Next.js, take a look at the following resources:
+The frontend sends authenticated POST requests to this endpoint using Firebase ID tokens.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## 🛠️ Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| **Script**         | **Usage**                                                    |
+|--------------------|--------------------------------------------------------------|
+| **npm run dev**    | Start the Next.js app in development mode at `localhost:3000` |
+| **npm run build**  | Create an optimized production build                         |
+| **npm run start**  | Start the production server                                  |
+| **npm run lint**   | Run ESLint to check code formatting and quality              |
+| **npm install**    | Install project dependencies from `package.json`             |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+ 
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
