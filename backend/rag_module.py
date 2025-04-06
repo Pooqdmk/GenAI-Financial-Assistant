@@ -5,6 +5,10 @@ import requests
 import os
 from sklearn.metrics.pairwise import cosine_similarity
 
+from dotenv import load_dotenv
+load_dotenv()
+
+
 # Load model
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
@@ -16,11 +20,19 @@ def fetch_finnhub_news():
         url = f"https://finnhub.io/api/v1/news?category=general&token={FINNHUB_API_KEY}"
         response = requests.get(url)
         data = response.json()
-        articles = [item["headline"] + ". " + item.get("summary", "") for item in data[:10]]
+
+        if isinstance(data, list):
+            articles = [item["headline"] + ". " + item.get("summary", "") for item in data[:10]]
+        else:
+            print("⚠️ API error or unexpected response format:", data)
+            articles = ["Fallback: Could not fetch news. Please check your API key or quota."]
+        
         return articles
     except Exception as e:
         print(f"Error fetching news: {e}")
         return ["Fallback: Index funds are great for passive income and long-term growth."]
+
+
 
 # Fetch docs
 documents = fetch_finnhub_news()
