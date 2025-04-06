@@ -22,8 +22,9 @@ user_sessions = {}
 
 # Initialize Firebase only once
 firebase_json = os.getenv("FIREBASE_KEY")
-cred = credentials.Certificate(json.loads(firebase_json))  
+cred = credentials.Certificate(json.loads(firebase_json))
 initialize_app(cred)
+
 db = firestore.client()
 
 # Initialize FastAPI
