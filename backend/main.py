@@ -16,6 +16,9 @@ from rag_module import retrieve_relevant_docs
 # Load environment variables
 load_dotenv()
 
+# Global session store for user prompts
+user_sessions = {}
+
 # Initialize Firebase only once
 cred = credentials.Certificate("firebase_key.json")  
 initialize_app(cred)
@@ -50,54 +53,40 @@ You are a financial assistant providing structured and user-friendly investment 
 - If asked, provide simple budget allocation breakdowns for different income levels.
 - At all times, stay professional yet engaging, making finance feel less intimidating and more exciting!
 - Enhance responses with emojis
+- Do not begin your responses with phrases like 'Here's what I found' or generic intros; dive directly into the useful content.
+
 """
+
 
 # Generate advice using Gemini + RAG
 def generate_investment_advice(prompt: str):
     try:
         model = genai.GenerativeModel("gemini-1.5-pro")
 
-        # 🔍 Retrieve relevant context from your vector DB
-        relevant_docs = retrieve_relevant_docs(prompt)
-        context = "\n".join(relevant_docs)
-
-        # Combine system prompt + retrieved context + user prompt
-        final_prompt = (
-            f"{SYSTEM_PROMPT}\n"
-            f"Context:\n{context}\n"
-            f"User: {prompt}\n"
-            f"Assistant:"
-        )
-
-        # 🎯 Get Gemini response
-        response = model.generate_content(final_prompt)
-
-        # 📦 Structure the output
-        structured_response = {
-            "stability": [],
-            "high_growth": [],
-            "passive_income": [],
-            "risk_level": "Medium",
-            "summary": ""
-        }
+        # 🧠 Removed SYSTEM_PROMPT and doc context here — already merged in /recommend
+        response = model.generate_content(prompt)
 
         if response and response.text:
-            text = response.text.lower()
-            if "bonds" in text:
-                structured_response["stability"].append("Bonds")
-            if "stocks" in text:
-                structured_response["high_growth"].append("Stocks")
-            if "reits" in text:
-                structured_response["passive_income"].append("REITs")
+            full_text = response.text.strip()
 
-            structured_response["summary"] = text.split(".")[-1].strip()
+            for unwanted_start in ["here's what i found", "sure!", "of course!"]:
+                if full_text.lower().startswith(unwanted_start):
+                    full_text = full_text.split(":", 1)[-1].strip()
 
-        return structured_response
+            # TL;DR Summary (Optional cleanup)
+            sentences = full_text.split(".")
+            summary = sentences[-1].strip() if len(sentences) > 1 else ""
+
+            return {
+                "response": full_text,
+                "summary": summary
+            }
+
+        return {"response": "", "summary": ""}
 
     except Exception as e:
         logging.error(f"Error generating content: {e}")
         return {"error": "Failed to generate response."}
-
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -148,48 +137,85 @@ def login():
         "message": "Use Firebase Authentication SDK to log in and obtain a token."
     }
 
-# Update User Profile (Investment Preferences)
+class UserProfileUpdate(BaseModel):
+    investment_type: str = None
+    experience_level: str = None
+
 @app.post("/update-profile")
-def update_profile(query: InvestmentQuery, user=Depends(verify_token)):
+def update_profile(profile: UserProfileUpdate, user=Depends(verify_token)):
     try:
-        user_id = user.get("uid")
-        db.collection("users").document(user_id).update({
-            "investment_type": query.investment_type,
-            "experience_level": query.experience_level
-        })
+        user_id = user["uid"]  # Make sure you're getting user ID from the token
+        update_data = {}
+
+        if profile.investment_type:
+            update_data["investment_type"] = profile.investment_type
+        if profile.experience_level:
+            update_data["experience_level"] = profile.experience_level
+
+        if update_data:
+            db.collection("users").document(user_id).update(update_data)
+        else:
+            raise HTTPException(status_code=400, detail="No valid fields to update.")
+
         return {"message": "Profile updated successfully"}
+
     except Exception as e:
         logger.error(f"Profile update failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to update profile")
 
-# Get Investment Recommendations (Using Gemini AI)
 @app.post("/recommend")
 def recommend(query: InvestmentQuery, user=Depends(verify_token)):
     try:
         user_id = user.get("uid")
         user_doc = db.collection("users").document(user_id).get()
 
-        # Combine user profile with their query
+        user_input = query.query.strip().lower()
+
+        # 👇 Debug input
+        print(f"Received input: {user_input}")
+
+        # Session logic
+        if len(user_input.split()) <= 3:
+            previous_prompt = user_sessions.get(user_id, "")
+            combined_prompt = f"{previous_prompt} {user_input}"
+        else:
+            combined_prompt = user_input
+
+        # 👇 Log final user prompt
+        print(f"Final user prompt: {combined_prompt}")
+
+        user_sessions[user_id] = combined_prompt
+
         if user_doc.exists:
             user_data = user_doc.to_dict()
             prompt = (
                 f"The user is a {user_data.get('experience_level', 'beginner')} investor "
                 f"interested in {user_data.get('investment_type', 'long-term')} investments. "
-                f"They asked: '{query.query}'"
+                f"They asked: '{combined_prompt}'. "
+                f"Give a detailed, beginner-friendly explanation using clear language. "
+                f"Break down any financial jargon and include examples where helpful. "
             )
         else:
             prompt = (
-                f"The user asked: '{query.query}'. "
-                f"Start by asking if they prefer low risk, high growth, or balanced investments."
+                f"The user asked: '{combined_prompt}'. "
+                f"Respond with a clear, informative, and easy-to-understand explanation. "
+                f"Avoid vague responses. If they asked about a concept like stocks, explain what it is with examples."
             )
 
-        recommendation = generate_investment_advice(prompt)
-        return {"recommendation": recommendation}
+
+        # 👇 Log prompt before sending to Gemini
+        print("Prompt sent to Gemini:\n", prompt)
+
+        final_prompt = f"{SYSTEM_PROMPT}\nUser Info:\n{prompt}\nAssistant:"
+        recommendation = generate_investment_advice(final_prompt)
+        print(recommendation)
+
+        return {"recommendation": recommendation["response"]}
+
 
     except Exception as e:
         logger.error(f"Error in /recommend: {e}")
         raise HTTPException(status_code=500, detail="An error occurred while processing your request.")
-
 
 # Allow CORS (🔹 Restrict later in production)
 app.add_middleware(
@@ -216,7 +242,8 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
         while True:
             await websocket.receive_text()  # Keep connection alive
     except WebSocketDisconnect:
-        connected_clients.remove({"id": user_id, "ws": websocket})
+        connected_clients[:] = [client for client in connected_clients if client["id"] != user_id]
+
 
 
 def listen_for_profile_changes():
