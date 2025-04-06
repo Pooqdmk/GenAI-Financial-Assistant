@@ -1,13 +1,125 @@
-# Financial Assistance
+# 💸 AI-Powered Financial Assistant
 
-- Create back end  
-- Integrate it with GPT  
-- Set up UI skeleton  
-- Add conversational capabilities  
-- Financial data API  
-- A bit of personalization  
-- XAI implementation  
+An intelligent **AI Financial Assistant** built for the Google Hackathon!  
+This tool helps users simplify money management by offering real-time insights, PDF-based financial summaries, and budgeting suggestions — all through natural conversation.
+
+---
+
+## 🔧 Features
+
+- ✅ **Conversational AI with Gemini** for smart financial dialogue  
+- 🔐 **Firebase Authentication** for secure and easy user login  
+- 📄 **Retrieval-Augmented Generation (RAG)** with external APIs  
+- 🌐 **WebSocket-based Real-Time Communication** for dynamic, streaming chat   
+- 💬 **Modern Chat UI with React**  
+- ⚡ **FastAPI Backend** for performance and simplicity  
  
+---
+
+## 🔍 Tech Stack
+
+| Layer        | Technology Used                    |
+|--------------|------------------------------------|
+| 💬 Frontend  | React, Tailwind CSS                |
+| ⚙️ Backend   | FastAPI, Python, WebSockets        |
+| 🔒 Auth      | Firebase Authentication            |
+| 🧠 AI Engine | Gemini Pro (Google AI Model)       |
+| 📄 RAG       | Sklearn                            |
+
+---
+## 🔐 Firebase Authentication
+
+Firebase handles secure authentication with:
+
+- ✅ **Email/Password Login**
+- 🔗 **Google Sign-In**
+- 🐙 **GitHub Login**
+---
+
+# 🧠 GenAI Financial Assistant (Backend)
+
+This backend powers a conversational AI-driven **financial advisor bot** that provides tailored investment advice using **Google Gemini Pro**, **Firebase**, **WebSockets**, and **Retrieval-Augmented Generation (RAG)** for enhanced knowledge grounding.
+
+---
+
+## 🚀 Features
+
+### 🔐 Firebase Authentication
+- Supports **Email/Password**, **Google**, and **GitHub** login.
+- Firebase Admin SDK handles secure user creation and token verification.
+- Firestore is used to store user profiles and preferences.
+
+### 🧠 Conversational AI with Gemini
+- Uses **Google's Gemini 1.5 Pro** model (`google.generativeai`) for natural, personalized financial advice.
+- Adapts advice based on:
+  - User's investment experience level (Beginner, Intermediate, Expert)
+  - Preferred investment type (e.g., Long-term, Passive income, etc.)
+- Responses include:
+  - TL;DR summaries
+  - Risk assessments
+  - Pro tips & common pitfalls
+  - Step-by-step action plans
+  - Emoji-enhanced answers for better readability
+- System prompt includes behavioral instructions for humor, analogies, and follow-up questioning
+
+### 📚 RAG (Retrieval-Augmented Generation)
+- Relevant documents are retrieved using a custom `rag_module` to ground Gemini responses in real facts.
+- Provides better accuracy and reliability for advice and definitions.
+
+### 🌐 WebSockets
+- Real-time profile change monitoring using **WebSocket endpoints**.
+- Backend pushes updates to connected clients whenever Firestore user data changes.
+
+### 🧩 Session Handling
+- Short user prompts are automatically merged with previous ones for context retention.
+- Each user has an active session maintained in memory to simulate multi-turn conversations.
+
+---
+
+## 📦 API Endpoints
+
+### `GET /`
+> Home route – "Welcome to GenAI Financial Assistant!"
+
+### `GET /healthcheck`
+> Returns service health status.
+
+### `POST /signup`
+> Creates a new user in Firebase and stores profile in Firestore.
+
+### `POST /login`
+> Frontend handles login using Firebase SDK; this route is informational.
+
+### `POST /update-profile`
+> Updates user's investment type and experience level.
+
+### `POST /recommend`
+> Core route for generating investment advice using Gemini + RAG + profile data.
+
+### `GET /ws/{user_id}`
+> WebSocket endpoint to push real-time updates to specific users.
+
+---
+
+## 🛡️ Security
+
+- Auth middleware verifies Firebase tokens using `HTTPBearer` scheme.
+- All protected routes require a valid JWT from Firebase.
+
+---
+
+## ⚙️ Tech Stack
+
+| Tech         | Usage                                      |
+|--------------|--------------------------------------------|
+| **FastAPI**  | Backend framework                          |
+| **Firebase** | Auth, Firestore, Realtime updates          |
+| **Gemini Pro** | Financial advice generation (GenAI)     |
+| **RAG**      | Knowledge grounding via custom module      |
+| **WebSockets** | Real-time client updates                 |
+| **CORS**     | Enabled for `localhost:3000` (frontend)    |
+
+---
 
  # frontend
  This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
