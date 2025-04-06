@@ -40,7 +40,7 @@ export default function Login() {
         justifyContent: "center",
         alignItems: "center",
         height: "100vh",
-        backgroundImage: "url('/images/loginimg.jpg')",
+        backgroundImage: "url('/images/loginimage.jpeg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -50,13 +50,13 @@ export default function Login() {
         style={{
           width: "400px",
           padding: "30px",
-          background: "rgba(255, 255, 255, 0.9)",
+          background: "rgba(255,255,255,0.9)",
           borderRadius: "10px",
           boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
           textAlign: "center",
         }}
       >
-        <h2 style={{ color: "#333", marginBottom: "20px" }}>Sign In</h2>
+        <h2 style={{ color: "rgba(45,30,20,1)", marginBottom: "20px" }}>Sign In</h2>
         {error && (
           <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>
         )}
@@ -101,7 +101,7 @@ export default function Login() {
             Sign In
           </button>
         </form>
-        <p style={{ margin: "15px 0", color: "#555" }}>Or continue with</p>
+        <p style={{ margin: "15px 0", color: "black" }}>Or continue with</p>
         <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
           <button
             onClick={() => handleSocialSignIn(googleProvider)}
@@ -112,7 +112,7 @@ export default function Login() {
               cursor: "pointer",
             }}
           >
-            <Image src="/images/google.png" alt="Google" width={30} height={30} />
+            <Image src="/images/google.png" alt="Google" width={60} height={50} />
           </button>
           <button
             onClick={() => handleSocialSignIn(githubProvider)}
@@ -123,10 +123,10 @@ export default function Login() {
               cursor: "pointer",
             }}
           >
-            <Image src="/images/GitHub-Logo.png" alt="GitHub" width={30} height={30} />
+            <Image src="/images/GitHub-Logo.png" alt="GitHub" width={60} height={50} />
           </button>
         </div>
-        <p style={{ marginTop: "20px", color: "#555" }}>
+        <p style={{ marginTop: "20px", color: "black" }}>
           Don't have an account?{" "}
           <button
             onClick={() => router.push("/auth/SignUp")}

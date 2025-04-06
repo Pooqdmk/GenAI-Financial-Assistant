@@ -56,3 +56,6 @@ yarn.lock
 
 # Testing
 coverage/
+
+# Firebase
+.firebase/
