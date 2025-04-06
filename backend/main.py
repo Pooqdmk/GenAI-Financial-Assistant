@@ -265,3 +265,7 @@ def listen_for_profile_changes():
 
 # Run Firestore listener in a separate thread
 threading.Thread(target=listen_for_profile_changes, daemon=True).start()
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
