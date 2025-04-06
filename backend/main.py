@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends, Security
-from firebase_admin import auth, credentials, firestore, initialize_app,_apps
+from firebase_admin import auth, credentials, firestore, initialize_app
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import google.generativeai as genai
 from pydantic import BaseModel
@@ -12,7 +12,6 @@ import asyncio
 import threading
 from rag_module import retrieve_relevant_docs
 
-import json
 
 # Load environment variables
 load_dotenv()
@@ -21,11 +20,8 @@ load_dotenv()
 user_sessions = {}
 
 # Initialize Firebase only once
-if not _apps:
-    firebase_json = os.getenv("FIREBASE_KEY")
-    cred = credentials.Certificate(json.loads(firebase_json))
-    initialize_app(cred)
-
+cred = credentials.Certificate("firebase_key.json")  
+initialize_app(cred)
 db = firestore.client()
 
 # Initialize FastAPI
@@ -94,7 +90,7 @@ def generate_investment_advice(prompt: str):
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(_name_)
 
 # Security scheme for token authentication
 security = HTTPBearer()
@@ -266,7 +262,3 @@ def listen_for_profile_changes():
 
 # Run Firestore listener in a separate thread
 threading.Thread(target=listen_for_profile_changes, daemon=True).start()
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000)
