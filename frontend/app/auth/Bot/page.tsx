@@ -1,5 +1,5 @@
-
 "use client";
+import ReactMarkdown from "react-markdown";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/firebase/firebaseConfig";
@@ -73,28 +73,19 @@ export default function Bot() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ query: userMessage }),
       });
 
       const data = await response.json();
 
-      const stripMarkdown = (text: string) => {
-        return text.replace(/\*\*(.*?)\*\*/g, '$1');
-      };
-      
-
       const rec = data.recommendation;
 
-      let cleanedRec = rec ? stripMarkdown(rec) : null;
+      let reply = rec
+        ? `🤖 Here's what I found:\n\n${rec}`
+        : "🛑 I couldn't generate a proper recommendation.";
 
-      let reply = cleanedRec
-        ? `🤖 Here's what I found:\n\n${cleanedRec}`
-        : "🤖 I couldn't generate a proper recommendation.";
-
-
-      // Append bot message
       const botReply = {
         text: reply,
         sender: "bot" as const,
@@ -164,7 +155,13 @@ export default function Bot() {
               <div key={idx} style={{ display: "flex", justifyContent: msg.sender === "user" ? "flex-end" : "flex-start", marginBottom: "10px" }}>
                 <div style={{ maxWidth: "60%", backgroundColor: msg.sender === "user" ? "#2B2F4C" : "#E2E8F0", padding: "10px", borderRadius: "10px", color: msg.sender === "user" ? "white" : "black" }}>
                   <div style={{ fontSize: "0.9em", marginBottom: "5px", fontWeight: "bold" }}>{msg.sender === "user" ? "You" : "Bot"}</div>
-                  <div style={{ whiteSpace: "pre-wrap" }}>{msg.text}</div>
+                  <div style={{ whiteSpace: "pre-wrap" }}>
+                    {msg.sender === "bot" ? (
+                      <ReactMarkdown>{msg.text}</ReactMarkdown>
+                    ) : (
+                      msg.text
+                    )}
+                  </div>
                   <div style={{ fontSize: "0.8em", color: "gray", marginTop: "5px", textAlign: "right" }}>{msg.timestamp}</div>
                 </div>
               </div>
