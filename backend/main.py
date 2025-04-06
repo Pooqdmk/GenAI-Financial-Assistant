@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends, Security
-from firebase_admin import auth, credentials, firestore, initialize_app
+from firebase_admin import auth, credentials, firestore, initialize_app,_apps
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import google.generativeai as genai
 from pydantic import BaseModel
@@ -11,8 +11,8 @@ from fastapi import WebSocket, WebSocketDisconnect, BackgroundTasks
 import asyncio
 import threading
 from rag_module import retrieve_relevant_docs
-import json
 
+import json
 
 # Load environment variables
 load_dotenv()
@@ -21,9 +21,10 @@ load_dotenv()
 user_sessions = {}
 
 # Initialize Firebase only once
-firebase_json = os.getenv("FIREBASE_KEY")
-cred = credentials.Certificate(json.loads(firebase_json))
-initialize_app(cred)
+if not _apps:
+    firebase_json = os.getenv("FIREBASE_KEY")
+    cred = credentials.Certificate(json.loads(firebase_json))
+    initialize_app(cred)
 
 db = firestore.client()
 
