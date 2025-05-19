@@ -61,7 +61,7 @@ You are a financial assistant providing structured and user-friendly investment 
 # Generate advice using Gemini + RAG
 def generate_investment_advice(prompt: str):
     try:
-        model = genai.GenerativeModel("gemini-1.5-pro")
+        model = genai.GenerativeModel("gemini-1.5-flash")
 
         # 🧠 Removed SYSTEM_PROMPT and doc context here — already merged in /recommend
         response = model.generate_content(prompt)
